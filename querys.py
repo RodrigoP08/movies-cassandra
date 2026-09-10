@@ -1,113 +1,165 @@
 from cassandra.cluster import Cluster
 import uuid
 
-# conectarse al cluster
-cluster = Cluster(['127.0.0.1'])
-session = cluster.connect()
-print('Se conecto bien a cassandra')
-
-
-def create_keyspace_and_table(session):
-    # Crearr keyspace
-    CREATE_KEYSPACE = """
+#
+CREATE_KEYSPACE = """
     CREATE KEYSPACE IF NOT EXISTS movies
     WITH replication = { 'class': 'SimpleStrategy','replication_factor':1}
-    """
+   """
+
+CREATE_TABLE_MOVIE_BY_TITLE = """
+    CREATE TABLE IF NOT EXISTS movies_by_title (movie_id UUID, title TEXT, release_year INT, genre TEXT, rating FLOAT, director TEXT,
+        PRIMARY KEY ((title), release_year)
+)
+"""
+CREATE_TABLE_MOVIE_BY_GENRE = """
+    CREATE TABLE IF NOT EXISTS movies_by_genre (movie_id UUID, title TEXT, release_year INT, genre TEXT, rating FLOAT, director TEXT,
+        PRIMARY KEY ((genre), rating)
+)
+"""
+INSERT_MOVIE_TITLE = """ 
+        INSERT INTO movies_by_title(movie_id, title, release_year, genre, rating, director)
+        VALUES (?, ?, ?, ?, ?, ?)
+"""        
+INERT_MOVIES_GENRE = """
+    INSERT INTO movies_by_genre(movie_id, title, release_year, genre, rating, director)
+    VALUES (?, ?, ?, ?, ?, ?)
+"""
+    
+SELECT_BY_TITLE = "SELECT * FROM movies_by_title"
+     
+SELECT_BY_GENRE = "SELECT * FROM movies_by_genre"
+         
+DELETE_MOVIE_TITLE = """
+    DELETE FROM movies_by_title WHERE title=? AND release_year=? AND genre=?
+"""
+
+UPDATE_MOVIE_DIRECTOR_T = """
+    UPDATE movies_by_title SET director=? WHERE title=? AND release_year=? AND dierctor=?
+"""
+UPDATE_MOVIE_DIRECTOR_G = """
+    UPDATE movies_by_genre SET director=? WHERE title=? AND rating=? AND dierctor=?
+"""
+
+DELETE_MOVIE_TILE = """
+    DELETE FROM movies_by_genre WHERE title =? AND release_year = ?
+"""
+
+DELETE_MOVIE_GENRE = """
+    DELETE FROM movies_by_genre WHERE genre =? AND rating = ?
+"""
+
+def create_keyspace_and_tables(session):
+    # Crearr keyspace
     session.execute(CREATE_KEYSPACE)
     session.set_keyspace("movies")
-
-
+    print("Creacion de keyspace exitoso")
     # CREACION DE TABLAS
-    CREATE_TABLE_MOVIE_BY_TITLE = """
-    CREATE TABLE IF NOT EXISTS movies_by_title (movie_id UUID, title TEXT, release_year INT, genre TEXT, rating FLOAT, director TEXT,
-                                          PRIMARY KEY ((title), release_year)
-    )
-    """
     stmt = session.prepare(CREATE_TABLE_MOVIE_BY_TITLE)
     session.execute(stmt)
     print("Tabla creada: movies_by_title")
 
-
-    CREATE_TABLE_MOVIE_BY_GENRE = """
-    CREATE TABLE IF NOT EXISTS movies_by_genre (movie_id UUID, title TEXT, release_year INT, genre TEXT, rating FLOAT, director TEXT,
-                                          PRIMARY KEY ((genre), rating)
-    )
-    """
     stmt = session.prepare(CREATE_TABLE_MOVIE_BY_GENRE)
     session.execute(stmt)
     print("Tabla creada: movies_by_genre")
-    pass:
+pass
 
 # INSERTS ------------------------------------------------------------------------
-def insert_movie(session, title, year, director, genre, rating, direcotr):
-    INSERT_MOVIE_TITLE = """ 
-    INSERT INTO movies_by_title(movie_id, title, release_year, genre, rating, director)
-    VALUES (?, ?, ?, ?, ?, ?)
-    """
+def insert_movie(session, title, year, director, genre, rating): 
     movie_id = uuid.uuid4()
     stmt = session.prepare(INSERT_MOVIE_TITLE)   
     session.execute(stmt, (movie_id, title, year, genre, rating, director))
 
-
-    INERT_MOVIES_GENRE = """
-    INSERT INTO movies_by_genre(movie_id, title, release_year, genre, rating, director)
-    VALUES (?, ?, ?, ?, ?, ?)
-    """
     movie_id = uuid.uuid4()
     stmt = session.prepare(INERT_MOVIES_GENRE)   
     session.execute(stmt, (movie_id, title, year, genre, rating, director))
-    pass:
+    pass
 # ----------------------------------------------------------------------------------------
 # CONSULTAR DATOS
 # por titulo
 
 def query_by_title(session, title, year):
-    SELECT_BY_TITLE = "SELECT * FROM movies_by_title"
     stmt = session.prepare(SELECT_BY_TITLE)
     rows = session.execute(stmt)
 
     for r in rows:
         print(r.title, r.release_year, r.genre, r.rating, r.dierctor)
-    pass:
+    pass
 
 def query_by_genre(session, genre):
 # consylta por genero
-    SELECT_BY_GENRE = "SELECT * FROM movies_by_genre"
-
+    pass
 
 # ----------------------------------------------------------------------------------------
 # ACTUALIZAR DATAZOAOS
-def update_movie_director(session, title, genre, new_director):
-    UPDATE_MOVIE_DIRECTOR = """
-    UPDATE movies_by_genre
-    SET rating=?
-    WHERE title=? AND genre=?
-        AND dierctor=?
-    """
-    stmt = session.prepare(UPDATE_RATING)
-    session.execute(stmt, (title, genre, new_director))
-    pass:
+def update_movie_director(session, title, genre, new_director, rating, release_year):   
+    stmt = session.prepare(UPDATE_MOVIE_DIRECTOR_T)
+    session.execute(stmt, (title, genre, new_director,release_year))
+    stmt = session.prepare(UPDATE_MOVIE_DIRECTOR_G)
+    session.execute(stmt, (title, genre, new_director,rating))
+    pass
 
-def update_movie
+def delete_movie(session, title, genre, rating, release_year):
 # ELIMINAR DATOS
-DELETE_MOVIE_TITLE = """
-DELETE FROM movies_by_title
-WHERE title=? AND release_year=?
-    AND genre=?
-"""
-stmt = session.prepare(DELETE_MOVIE_TITLE)
-session.execute(stmt, ("Greatest Hits", 2022, "Song_1"))
+    stmt = session.prepare(DELETE_MOVIE_TITLE)
+    session.execute(stmt, (title, genre, rating, release_year ))
+    
+    stmt = session.prepare(DELETE_MOVIE_GENRE)
+    session.execute(stmt, (title, genre, rating, release_year ))
+        
+    pass
 
-DELETE_MOVIE_GENRE = """
-DELETE FROM movies_by_genre
-WHERE genre =? AND title = ?
-    AND = release_year = ?
-"""
-smt = sessions.prepare(DELETE_MOVIE_GENRE)
+# --------------------------------------
 
-# ELIMINAR TABLA Y CERRAR CONEXION
-DROP_TABLE = "DROP TABLE IF EXISTS spotify_songs"
-stmt = session.prepare(DROP_TABLE)
-session.execute(stmt)
+def main():
+    cluster = Cluster(['127.0.0.1'])
+    session = cluster.connect()
+    create_keyspace_and_tables(session)
 
-Cluster.shutdown()
+    while True:
+        print("\n=== Movie Database Menu ===")
+        print("1. Insertar película")
+        print("2. Consultar por título")
+        print("3. Consultar por género")
+        print("4. Actualizar director")
+        print("0. Salir")
+        choice = input("Seleccione opción: ")
+        
+        if choice == "1":
+            title = input("Título: ")
+            year = int(input("Año: "))
+            director = input("Director: ")
+            genre = input("Género: ")
+            rating = float(input("Rating: "))
+            insert_movie(session, title, year, director, genre, rating)
+        elif choice == "2":
+            title = input("Título: ")
+            year = int(input("Año: "))
+            query_by_title(session, title, year)
+        elif choice == "3":
+            genre = input("Género: ")
+            query_by_genre(session, genre)
+        elif choice == "4":
+            title = input("Título: ")
+            genre = input("Género: ")
+            new_director = input("Nuevo Director: ")
+            update_movie_director(session, title, genre, new_director,release_year, rating)
+        elif choice == "5":
+            # Eliminar de movie_by_title -> title, release_year
+            # Eliminar de movie_by_genre -> genre, rating
+            title = input("Título: ")
+            genre = input("Género: ")
+            rating = input("Rating: ")
+            release_year = input("Año: ")
+            delete_movie(session, title, genre, rating, release_year)
+        elif choice == '0':
+        # Cerrar conexión y salir
+            cluster.shutdown()
+            break;
+            pass
+        else:
+            print("Opción inválida")
+        break
+
+if __name__ == "__main__":
+    main()
