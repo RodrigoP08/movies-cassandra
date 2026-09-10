@@ -88,7 +88,7 @@ def update_movie_director(session, title, genre, new_director):
     session.execute(stmt, (title, genre, new_director))
     pass:
 
-def upadte_movie
+def update_movie
 # ELIMINAR DATOS
 DELETE_MOVIE_TITLE = """
 DELETE FROM movies_by_title
@@ -103,7 +103,7 @@ DELETE FROM movies_by_genre
 WHERE genre =? AND title = ?
     AND = release_year = ?
 """
-smt = sessio.prepare(DELETE_MOVIE_GENRE)
+smt = sessions.prepare(DELETE_MOVIE_GENRE)
 
 # ELIMINAR TABLA Y CERRAR CONEXION
 DROP_TABLE = "DROP TABLE IF EXISTS spotify_songs"
