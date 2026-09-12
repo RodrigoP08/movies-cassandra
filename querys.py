@@ -44,7 +44,7 @@ UPDATE_MOVIE_DIRECTOR_G = """
 """
 
 DELETE_MOVIE_TITLE = """
-    DELETE FROM movies_by_genre WHERE title =? AND release_year = ?
+    DELETE FROM movies_by_title WHERE title =? AND release_year = ?
 """
 
 DELETE_MOVIE_GENRE = """
@@ -106,13 +106,13 @@ def update_movie_director(session, title, release_year, genre, rating, new_direc
     session.execute(stmt, (new_director, genre, rating))
     pass
 
-def delete_movie(session, title, genre, rating, release_year):
+def delete_movie(session, title, release_year, genre, rating):
 # ELIMINAR DATOS
     stmt = session.prepare(DELETE_MOVIE_TITLE)
-    session.execute(stmt, (title, genre, rating, release_year ))
+    session.execute(stmt, (title, release_year ))
     
     stmt = session.prepare(DELETE_MOVIE_GENRE)
-    session.execute(stmt, (title, genre, rating, release_year ))
+    session.execute(stmt, (genre, rating))
         
     pass
 
@@ -129,6 +129,7 @@ def main():
         print("2. Consultar por título")
         print("3. Consultar por género")
         print("4. Actualizar director")
+        print("5. Eliminar película")
         print("0. Salir")
         choice = input("Seleccione opción: ")
         
@@ -156,9 +157,9 @@ def main():
             # Eliminar de movie_by_genre -> genre, rating
             title = input("Título: ")
             genre = input("Género: ")
-            rating = input("Rating: ")
-            release_year = input("Año: ")
-            delete_movie(session, title, genre, rating, release_year)
+            rating = float(input("Rating: "))
+            release_year = int(input("Año: "))
+            delete_movie(session, title, release_year, genre, rating)
         elif choice == '0':
         # Cerrar conexión y salir
             cluster.shutdown()
