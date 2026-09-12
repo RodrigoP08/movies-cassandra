@@ -35,18 +35,15 @@ SELECT_BY_GENRE = """
     SELECT * FROM movies_by_genre WHERE genre = ? ORDER BY rating DESC
 """
          
-DELETE_MOVIE_TITLE = """
-    DELETE FROM movies_by_title WHERE title=? AND release_year=? AND genre=?
-"""
 
 UPDATE_MOVIE_DIRECTOR_T = """
-    UPDATE movies_by_title SET director=? WHERE title=? AND release_year=? AND dierctor=?
+    UPDATE movies_by_title SET director=? WHERE title=? AND release_year=? 
 """
 UPDATE_MOVIE_DIRECTOR_G = """
-    UPDATE movies_by_genre SET director=? WHERE title=? AND rating=? AND dierctor=?
+    UPDATE movies_by_genre SET director=? WHERE genre=? AND rating=? 
 """
 
-DELETE_MOVIE_TILE = """
+DELETE_MOVIE_TITLE = """
     DELETE FROM movies_by_genre WHERE title =? AND release_year = ?
 """
 
@@ -102,11 +99,11 @@ def query_by_genre(session, genre):
 
 # ----------------------------------------------------------------------------------------
 # ACTUALIZAR DATAZOAOS
-def update_movie_director(session, title, genre, new_director, rating, release_year):   
+def update_movie_director(session, title, release_year, genre, rating, new_director):   
     stmt = session.prepare(UPDATE_MOVIE_DIRECTOR_T)
-    session.execute(stmt, (title, genre, new_director,release_year))
+    session.execute(stmt, (new_director, title, release_year))
     stmt = session.prepare(UPDATE_MOVIE_DIRECTOR_G)
-    session.execute(stmt, (title, genre, new_director,rating))
+    session.execute(stmt, (new_director, genre, rating))
     pass
 
 def delete_movie(session, title, genre, rating, release_year):
@@ -153,7 +150,7 @@ def main():
             title = input("Título: ")
             genre = input("Género: ")
             new_director = input("Nuevo Director: ")
-            update_movie_director(session, title, genre, new_director,release_year, rating)
+            update_movie_director(session, title, release_year, genre,rating, new_director)
         elif choice == "5":
             # Eliminar de movie_by_title -> title, release_year
             # Eliminar de movie_by_genre -> genre, rating
@@ -168,8 +165,8 @@ def main():
             break;
             pass
         else:
-            print("Opción inválida")
-        break
+            print("Opción inválida") 
+            break
 
 if __name__ == "__main__":
     main()
