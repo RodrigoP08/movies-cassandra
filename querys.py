@@ -15,6 +15,7 @@ CREATE_TABLE_MOVIE_BY_TITLE = """
 CREATE_TABLE_MOVIE_BY_GENRE = """
     CREATE TABLE IF NOT EXISTS movies_by_genre (movie_id UUID, title TEXT, release_year INT, genre TEXT, rating FLOAT, director TEXT,
         PRIMARY KEY ((genre), rating)
+
 )
 """
 INSERT_MOVIE_TITLE = """ 
@@ -26,9 +27,13 @@ INERT_MOVIES_GENRE = """
     VALUES (?, ?, ?, ?, ?, ?)
 """
     
-SELECT_BY_TITLE = "SELECT * FROM movies_by_title"
+SELECT_BY_TITLE = """
+    SELECT * FROM movies_by_title WHERE title = ? AND release_year = ?
+"""
      
-SELECT_BY_GENRE = "SELECT * FROM movies_by_genre"
+SELECT_BY_GENRE = """
+    SELECT * FROM movies_by_genre WHERE genre = ? ORDER BY rating DESC
+"""
          
 DELETE_MOVIE_TITLE = """
     DELETE FROM movies_by_title WHERE title=? AND release_year=? AND genre=?
@@ -80,14 +85,19 @@ def insert_movie(session, title, year, director, genre, rating):
 
 def query_by_title(session, title, year):
     stmt = session.prepare(SELECT_BY_TITLE)
-    rows = session.execute(stmt)
+    rows = session.execute(stmt, (title, year))
 
     for r in rows:
-        print(r.title, r.release_year, r.genre, r.rating, r.dierctor)
+        print(r.title, r.release_year, r.genre, r.rating, r.director)
     pass
 
 def query_by_genre(session, genre):
 # consylta por genero
+    stmt = session.prepare(SELECT_BY_GENRE)
+    rows = session.execute(stmt, (genre,))
+
+    for r in rows:
+        print(r.title, r.rating)
     pass
 
 # ----------------------------------------------------------------------------------------
