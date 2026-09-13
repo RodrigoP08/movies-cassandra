@@ -9,7 +9,7 @@ CREATE_KEYSPACE = """
 
 CREATE_TABLE_MOVIE_BY_TITLE = """
     CREATE TABLE IF NOT EXISTS movies_by_title (movie_id UUID, title TEXT, release_year INT, genre TEXT, rating FLOAT, director TEXT,
-        PRIMARY KEY ((title), release_year)
+        PRIMARY KEY (title, release_year)
 )
 """
 CREATE_TABLE_MOVIE_BY_GENRE = """
@@ -72,7 +72,6 @@ def insert_movie(session, title, year, director, genre, rating):
     stmt = session.prepare(INSERT_MOVIE_TITLE)   
     session.execute(stmt, (movie_id, title, year, genre, rating, director))
 
-    movie_id = uuid.uuid4()
     stmt = session.prepare(INERT_MOVIES_GENRE)   
     session.execute(stmt, (movie_id, title, year, genre, rating, director))
     pass
@@ -83,18 +82,18 @@ def insert_movie(session, title, year, director, genre, rating):
 def query_by_title(session, title, year):
     stmt = session.prepare(SELECT_BY_TITLE)
     rows = session.execute(stmt, (title, year))
-
+    print('>>\n')
     for r in rows:
-        print(r.title, r.release_year, r.genre, r.rating, r.director)
+        print(f'Título: {r.title}\nAño de estreno: {r.release_year}\n')
     pass
 
 def query_by_genre(session, genre):
 # consylta por genero
     stmt = session.prepare(SELECT_BY_GENRE)
     rows = session.execute(stmt, (genre,))
-
+    print(f'Género:{genre}\n')
     for r in rows:
-        print(r.title, r.rating)
+        print(f'Titulo: {r.title} - Rating: {r.rating}\n')
     pass
 
 # ----------------------------------------------------------------------------------------
@@ -119,7 +118,10 @@ def delete_movie(session, title, release_year, genre, rating):
 # --------------------------------------
 
 def main():
-    cluster = Cluster(['127.0.0.1'])
+#    cluster = Cluster(['127.0.0.1'])
+    cluster = Cluster(['172.26.160.1'], port=9024)  #PARA QUE RODRIGO LE FUNCIONE TIENE QUE PONER ESTO
+                                                    #EN CASO DE NO ESTAR SALADO COMO RODRIGO NO ES NECESARIO (CREO)
+
     session = cluster.connect()
     create_keyspace_and_tables(session)
 
@@ -149,8 +151,11 @@ def main():
             query_by_genre(session, genre)
         elif choice == "4":
             title = input("Título: ")
-            genre = input("Género: ")
+            release_year = int(input("Año:"))
             new_director = input("Nuevo Director: ")
+            genre = input("Género: ")
+            rating = float(input("Rating: "))
+
             update_movie_director(session, title, release_year, genre,rating, new_director)
         elif choice == "5":
             # Eliminar de movie_by_title -> title, release_year
